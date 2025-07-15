@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup - Creative Student Task Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/style.css">
+  <link rel="shortcut icon" href="./media/logo_nazzemly.png" type="image/x-icon">
+
+  <style>
+body {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  font-family: 'Poppins', 'Cairo', sans-serif;
+}
+
+.logo img {
+  box-shadow: 0 4px 24px 0 rgba(60,80,180,0.18),
+              0 1px 4px 0 rgba(60,80,180,0.10);
+}
+
+.signup-container {
+  max-width: 350px;
+  margin: 60px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(60, 80, 180, 0.18),
+              0 2px 8px 0 rgba(60,80,180,0.10);
+  padding: 32px;
+  transition: box-shadow 0.2s;
+}
+
+.signup-container:hover {
+  box-shadow: 0 12px 40px 0 rgba(60, 80, 180, 0.28),
+              0 4px 16px 0 rgba(60,80,180,0.15);
+}
+
+.signup-container h2 {
+  text-align: center;
+  margin-bottom: 24px;
+  color: var(--primary-color,#3b82f6);
+}
+
+.signup-container input {
+  width: 90%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.signup-container button {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-color,#3b82f6);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.signup-container .link {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  color: var(--primary-color,#3b82f6);
+  text-decoration: none;
+}
+@media (max-width: 400px) {
+  .signup-container {
+    margin: 60px 30px;
+    padding: 18px;
+  }
+}
+  </style>
+</head>
+<body>
+   <div class="logo">
+    <img  src="./media/logo_nazzemly.png" alt="Logo"  >
+  </div>
+  <div class="signup-container">
+    <h2>Signup</h2>
+    <form id="signup-form">
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+      <label style="display:block;margin-bottom:8px;">Profile Picture:
+        <input type="file" id="profile-picture" accept="image/*" style="margin-top:4px;">
+      </label>
+      <img id="preview-img" src="" alt="" style="display:none;width:48px;height:48px;border-radius:50%;margin-bottom:8px;">
+      <button type="submit">Create Account</button>
+    </form>
+    <a href="login.html" class="link">Already have an account?</a>
+    <a href="index.html" class="link">Back to Home</a>
+  </div>
+  <script>
+    document.getElementById('signup-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      let picture = '';
+      const file = document.getElementById('profile-picture').files[0];
+      let valid = true;
+      let errorMsg = '';
+      if (!username) {
+        valid = false;
+        errorMsg = (localStorage.getItem('task-manager-lang') === 'ar') ? 'يرجى إدخال اسم المستخدم' : 'Please enter a username';
+      } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+        valid = false;
+        errorMsg = (localStorage.getItem('task-manager-lang') === 'ar') ? 'يرجى إدخال بريد إلكتروني صحيح' : 'Please enter a valid email address';
+      } else if (!password || password.length < 6) {
+        valid = false;
+        errorMsg = (localStorage.getItem('task-manager-lang') === 'ar') ? 'كلمة المرور يجب أن تكون 6 أحرف أو أكثر' : 'Password must be at least 6 characters';
+      } else if (password !== confirmPassword) {
+        valid = false;
+        errorMsg = (localStorage.getItem('task-manager-lang') === 'ar') ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match';
+      }
+      let errorDiv = document.getElementById('signup-error');
+      if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'signup-error';
+        errorDiv.style.color = '#ef4444';
+        errorDiv.style.textAlign = 'center';
+        errorDiv.style.marginBottom = '10px';
+        document.querySelector('.signup-container').insertBefore(errorDiv, document.getElementById('signup-form'));
+      }
+      if (!valid) {
+        errorDiv.textContent = errorMsg;
+        return;
+      } else {
+        errorDiv.textContent = '';
+      }
+      if (file) {
+        picture = await fileToBase64(file);
+      }
+      localStorage.clear();
+      const userKey = 'user_' + btoa(email);
+      localStorage.setItem('currentUserKey', userKey);
+      localStorage.setItem(userKey, JSON.stringify({name: username, email: email, picture: picture}));
+      localStorage.setItem('user', JSON.stringify({name: username, email: email, picture: picture}));
+      window.location.href = 'index.html';
+    };
+    document.getElementById('profile-picture').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('preview-img');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          preview.src = ev.target.result;
+          preview.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    });
+    function fileToBase64(file) {
+      return new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result);
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
+</body>
+</html>
